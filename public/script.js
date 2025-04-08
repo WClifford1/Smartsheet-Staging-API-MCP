@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: JSON.stringify({
                     messages: [
-                        { role: 'system', content: 'You are a helpful assistant that can provide information about Smartsheet data using the available tools. You can list sheets, get sheet details, and generate summaries of sheets.' },
+                        { role: 'system', content: 'You are a helpful assistant that can provide information about Smartsheet data using the available tools. You can list sheets, get sheet details, generate summaries of sheets, and analyze project sheets to provide insights on status, risks, resources, and timelines. For project analysis, you should ask for the sheet ID and what type of analysis the user wants (status, risks, resources, timeline, or a comprehensive analysis).' },
                         { role: 'user', content: message }
                     ],
                     functions: [
@@ -96,6 +96,25 @@ document.addEventListener('DOMContentLoaded', () => {
                                     sheetId: {
                                         type: "string",
                                         description: "The ID of the sheet to summarize"
+                                    }
+                                },
+                                required: ["sheetId"]
+                            }
+                        },
+                        {
+                            name: "analyze_project",
+                            description: "Analyze project status and provide insights for a project sheet",
+                            parameters: {
+                                type: "object",
+                                properties: {
+                                    sheetId: {
+                                        type: "string",
+                                        description: "The ID of the project sheet to analyze"
+                                    },
+                                    analysisType: {
+                                        type: "string",
+                                        description: "Type of analysis to perform (status, risks, resources, timeline, or all)",
+                                        enum: ["status", "risks", "resources", "timeline", "all"]
                                     }
                                 },
                                 required: ["sheetId"]
@@ -145,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                     body: JSON.stringify({
                         messages: [
-                            { role: 'system', content: 'You are a helpful assistant that can provide information about Smartsheet data using the available tools. You can list sheets, get sheet details, and generate summaries of sheets.' },
+                            { role: 'system', content: 'You are a helpful assistant that can provide information about Smartsheet data using the available tools. You can list sheets, get sheet details, generate summaries of sheets, and analyze project sheets to provide insights on status, risks, resources, and timelines. For project analysis, you should ask for the sheet ID and what type of analysis the user wants (status, risks, resources, timeline, or a comprehensive analysis).' },
                             { role: 'user', content: message },
                             { role: 'assistant', content: '', function_call: openaiData.function_call },
                             { role: 'function', name: functionName, content: JSON.stringify(mcpData) }
