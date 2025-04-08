@@ -1,9 +1,9 @@
-const { DogApiService } = require('./dogApiService');
+const { SmartsheetApiService } = require('./smartsheetApiService');
 const { OpenAIService } = require('./openaiService');
 
 class MCPService {
   constructor() {
-    this.dogApiService = new DogApiService();
+    this.smartsheetApiService = new SmartsheetApiService();
     this.openaiService = new OpenAIService();
   }
 
@@ -13,19 +13,14 @@ class MCPService {
   getResources() {
     return [
       {
-        name: 'dog_breeds',
-        description: 'Information about dog breeds',
-        endpoint: '/api/dogs/breeds'
+        name: 'sheets',
+        description: 'Information about Smartsheet sheets',
+        endpoint: '/api/smartsheet/sheets'
       },
       {
-        name: 'random_dog',
-        description: 'Get a random dog image',
-        endpoint: '/api/dogs/random'
-      },
-      {
-        name: 'breed_images',
-        description: 'Get images for a specific breed',
-        endpoint: '/api/dogs/breeds/{breedId}/images'
+        name: 'sheet_details',
+        description: 'Get details for a specific sheet',
+        endpoint: '/api/smartsheet/sheets/{sheetId}'
       }
     ];
   }
@@ -36,55 +31,30 @@ class MCPService {
   getTools() {
     return [
       {
-        name: 'get_dog_description',
-        description: 'Generate a description for a dog breed',
+        name: 'list_sheets',
+        description: 'Get a list of all available sheets',
+        parameters: []
+      },
+      {
+        name: 'get_sheet_details',
+        description: 'Get details of a specific sheet by ID',
         parameters: [
           {
-            name: 'breed',
+            name: 'sheetId',
             type: 'string',
-            description: 'The name of the dog breed',
+            description: 'The ID of the sheet',
             required: true
-          },
-          {
-            name: 'characteristics',
-            type: 'array',
-            description: 'Specific characteristics to include in the description',
-            required: false
           }
         ]
       },
       {
-        name: 'get_dog_care_tips',
-        description: 'Generate care tips for a dog breed',
+        name: 'summarize_sheet',
+        description: 'Generate a summary of a sheet using OpenAI',
         parameters: [
           {
-            name: 'breed',
+            name: 'sheetId',
             type: 'string',
-            description: 'The name of the dog breed',
-            required: true
-          },
-          {
-            name: 'age',
-            type: 'string',
-            description: 'The age of the dog',
-            required: false
-          },
-          {
-            name: 'lifestyle',
-            type: 'string',
-            description: 'The lifestyle of the owner',
-            required: false
-          }
-        ]
-      },
-      {
-        name: 'get_breed_match',
-        description: 'Find dog breeds that match given criteria',
-        parameters: [
-          {
-            name: 'criteria',
-            type: 'object',
-            description: 'Criteria for matching dog breeds (size, temperament, etc.)',
+            description: 'The ID of the sheet to summarize',
             required: true
           }
         ]
@@ -98,12 +68,12 @@ class MCPService {
   async executeTool(toolName, parameters) {
     try {
       switch (toolName) {
-        case 'get_dog_description':
-          return await this.getDogDescription(parameters);
-        case 'get_dog_care_tips':
-          return await this.getDogCareTips(parameters);
-        case 'get_breed_match':
-          return await this.getBreedMatch(parameters);
+        case 'list_sheets':
+          return await this.listSheets();
+        case 'get_sheet_details':
+          return await this.getSheetDetails(parameters);
+        case 'summarize_sheet':
+          return await this.summarizeSheet(parameters);
         default:
           return {
             success: false,
@@ -119,113 +89,100 @@ class MCPService {
   }
 
   /**
-   * Get a description for a dog breed
+   * List all available sheets
    */
-  async getDogDescription(parameters) {
-    const { breed, characteristics } = parameters;
-
-    if (!breed) {
-      return {
-        success: false,
-        error: 'Breed is required'
-      };
-    }
-
+  async listSheets() {
     try {
-      const description = await this.openaiService.generateDogDescription(breed, characteristics);
+      const sheets = await this.smartsheetApiService.getSheets();
       return {
         success: true,
-        data: { description }
+        data: sheets
       };
     } catch (error) {
       return {
         success: false,
-        error: error.message || 'Failed to generate dog description'
+        error: error.message || 'Failed to list sheets'
       };
     }
   }
 
   /**
-   * Get care tips for a dog breed
+   * Get details of a specific sheet
    */
-  async getDogCareTips(parameters) {
-    const { breed, age, lifestyle } = parameters;
+  async getSheetDetails(parameters) {
+    const { sheetId } = parameters;
 
-    if (!breed) {
+    if (!sheetId) {
       return {
         success: false,
-        error: 'Breed is required'
+        error: 'Sheet ID is required'
       };
     }
 
     try {
-      const careTips = await this.openaiService.generateDogCareTips(breed, age, lifestyle);
+      const sheet = await this.smartsheetApiService.getSheetById(sheetId);
       return {
         success: true,
-        data: { careTips }
+        data: sheet
       };
     } catch (error) {
       return {
         success: false,
-        error: error.message || 'Failed to generate dog care tips'
+        error: error.message || 'Failed to get sheet details'
       };
     }
   }
 
   /**
-   * Get dog breeds that match given criteria
+   * Generate a summary of a sheet using OpenAI
    */
-  async getBreedMatch(parameters) {
-    const { criteria } = parameters;
+  async summarizeSheet(parameters) {
+    const { sheetId } = parameters;
 
-    if (!criteria) {
+    if (!sheetId) {
       return {
         success: false,
-        error: 'Criteria is required'
+        error: 'Sheet ID is required'
       };
     }
 
     try {
-      // Get all breeds
-      const breeds = await this.dogApiService.getBreeds();
+      // Get the sheet details
+      const sheet = await this.smartsheetApiService.getSheetById(sheetId);
 
-      // Use OpenAI to find matches based on criteria
-      const prompt = `Given the following dog breeds and their characteristics:
-      ${JSON.stringify(breeds.map(b => ({
-        name: b.name,
-        temperament: b.temperament,
-        bred_for: b.bred_for,
-        breed_group: b.breed_group,
-        life_span: b.life_span,
-        weight: b.weight?.metric,
-        height: b.height?.metric
-      })))}
+      // Create a prompt for OpenAI
+      const prompt = `Summarize the following Smartsheet data:
 
-      Find the top 3 dog breeds that best match the following criteria:
-      ${JSON.stringify(criteria)}
+Sheet Name: ${sheet.name}
+Number of Columns: ${sheet.columns ? sheet.columns.length : 'Unknown'}
+Number of Rows: ${sheet.rows ? sheet.rows.length : 'Unknown'}
 
-      Return the result as a JSON array with the breed name and a brief explanation of why it matches.`;
+Please provide a concise summary of the sheet's purpose and content based on its structure.`;
 
+      // Use OpenAI to generate a summary
       const response = await this.openaiService.makeCustomApiCall({
         model: "gpt-4",
         messages: [
-          { role: "system", content: "You are a helpful assistant that matches dog breeds to criteria. Return only valid JSON." },
+          { role: "system", content: "You are a helpful assistant that summarizes Smartsheet data." },
           { role: "user", content: prompt }
         ],
-        response_format: { type: "json_object" }
+        max_tokens: 500
       });
 
-      const content = response.choices[0].message.content;
-      const matches = content ? JSON.parse(content) : { matches: [] };
+      const summary = response.choices[0].message.content;
 
       return {
         success: true,
-        data: matches
+        data: {
+          sheetId,
+          sheetName: sheet.name,
+          summary
+        }
       };
     } catch (error) {
       return {
         success: false,
-        error: error.message || 'Failed to find matching breeds'
+        error: error.message || 'Failed to summarize sheet'
       };
     }
   }

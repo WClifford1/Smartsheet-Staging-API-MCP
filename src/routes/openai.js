@@ -4,6 +4,43 @@ const { OpenAIService } = require('../services/openaiService');
 const router = express.Router();
 const openaiService = new OpenAIService();
 
+// Chat with OpenAI
+router.post('/chat', async (req, res) => {
+  try {
+    const { messages, functions, function_call } = req.body;
+
+    if (!messages || !Array.isArray(messages)) {
+      return res.status(400).json({ error: 'Messages array is required' });
+    }
+
+    // Create options for the API call
+    const options = {
+      model: "gpt-4",
+      messages: messages,
+      max_tokens: 500
+    };
+
+    // Add functions if provided
+    if (functions) {
+      options.functions = functions;
+    }
+
+    // Add function_call if provided
+    if (function_call) {
+      options.function_call = function_call;
+    }
+
+    // Call OpenAI
+    const response = await openaiService.makeCustomApiCall(options);
+
+    // Return the response
+    res.json(response.choices[0].message);
+  } catch (error) {
+    console.error('Error in OpenAI chat:', error);
+    res.status(500).json({ error: 'Failed to process chat request' });
+  }
+});
+
 // Generate dog description
 router.post('/generate-description', async (req, res) => {
   try {

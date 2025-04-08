@@ -1,11 +1,11 @@
-# Dog MCP Server
+# Smartsheet MCP Server
 
-An MCP (Machine Conversation Protocol) server that integrates The Dog API with OpenAI to provide enhanced dog-related information and services.
+An MCP (Machine Conversation Protocol) server that integrates the Smartsheet API with OpenAI to provide enhanced Smartsheet information and services.
 
 ## Features
 
-- Integration with The Dog API for dog breed information and images
-- Integration with OpenAI for generating dog descriptions and care tips
+- Integration with the Smartsheet API for sheet information
+- Integration with OpenAI for generating sheet summaries
 - MCP protocol implementation for standardized tool and resource access
 - RESTful API endpoints for accessing all functionality
 
@@ -14,14 +14,14 @@ An MCP (Machine Conversation Protocol) server that integrates The Dog API with O
 - Node.js (v14 or higher)
 - npm (v6 or higher)
 - OpenAI API key
-- The Dog API key
+- Smartsheet Staging API key
 
 ## Installation
 
 1. Clone the repository:
    ```
    git clone <repository-url>
-   cd dog-mcp
+   cd smartsheet-mcp
    ```
 
 2. Install dependencies:
@@ -34,14 +34,14 @@ An MCP (Machine Conversation Protocol) server that integrates The Dog API with O
    # OpenAI API Key
    OPENAI_API_KEY=your_openai_api_key_here
 
-   # The Dog API Key
-   DOG_API_KEY=your_dog_api_key_here
+   # Smartsheet Staging API Key
+   SMARTSHEET_STAGING_API_KEY=your_smartsheet_staging_api_key_here
 
    # Server Port
    PORT=3000
    ```
 
-4. Replace `your_openai_api_key_here` with your actual OpenAI API key and `your_dog_api_key_here` with your actual Dog API key.
+4. Replace `your_openai_api_key_here` with your actual OpenAI API key and `your_smartsheet_staging_api_key_here` with your actual Smartsheet Staging API key.
 
 ## Usage
 
@@ -68,54 +68,58 @@ npm start
 
 - `GET /`: Welcome message and available endpoints
 
-### Dog API Endpoints
+### Smartsheet API Endpoints
 
-- `GET /api/dogs/random`: Get a random dog image
-- `GET /api/dogs/breeds`: Get a list of all dog breeds
-- `GET /api/dogs/breeds/:breedId/images`: Get images for a specific breed
+- `GET /api/smartsheet/sheets`: Get a list of all sheets
+- `GET /api/smartsheet/sheets/:sheetId`: Get details of a specific sheet
 
 ### OpenAI Endpoints
 
-- `POST /api/openai/generate-description`: Generate a description for a dog breed
-  - Request body: `{ "breed": "Labrador", "characteristics": ["friendly", "energetic"] }`
-
-- `POST /api/openai/generate-care-tips`: Generate care tips for a dog breed
-  - Request body: `{ "breed": "Labrador", "age": "puppy", "lifestyle": "active" }`
+- `POST /api/openai/generate-description`: Generate a description using OpenAI
 
 ### MCP Endpoints
 
 - `GET /mcp/resources`: Get available MCP resources
 - `GET /mcp/tools`: Get available MCP tools
 - `POST /mcp/execute`: Execute an MCP tool
-  - Request body: `{ "toolName": "get_dog_description", "parameters": { "breed": "Labrador" } }`
+  - Request body: `{ "toolName": "list_sheets", "parameters": {} }`
 
 ## MCP Tools
 
-### get_dog_description
+### list_sheets
 
-Generates a detailed description for a dog breed.
+Lists all available Smartsheet sheets.
 
-Parameters:
-- `breed` (string, required): The name of the dog breed
-- `characteristics` (array, optional): Specific characteristics to include in the description
+Parameters: None
 
-### get_dog_care_tips
+### get_sheet_details
 
-Generates care tips for a dog breed.
+Gets details of a specific sheet by ID.
 
 Parameters:
-- `breed` (string, required): The name of the dog breed
-- `age` (string, optional): The age of the dog
-- `lifestyle` (string, optional): The lifestyle of the owner
+- `sheetId` (string, required): The ID of the sheet
 
-### get_breed_match
+### summarize_sheet
 
-Finds dog breeds that match given criteria.
+Generates a summary of a sheet using OpenAI.
 
 Parameters:
-- `criteria` (object, required): Criteria for matching dog breeds (size, temperament, etc.)
+- `sheetId` (string, required): The ID of the sheet to summarize
+
+## Chat Interface
+
+A simple chat interface is provided to interact with the MCP server using natural language. To use it:
+
+1. Make sure the MCP server is running
+2. Run the chat script with your OpenAI API key:
+   ```
+   OPENAI_API_KEY=your_openai_api_key_here node chat-with-smartsheet-mcp.js
+   ```
+3. Ask questions about your Smartsheet data, such as:
+   - "List all my sheets"
+   - "Show me details of sheet with ID 123456789"
+   - "Summarize sheet 123456789"
 
 ## License
 
 ISC
-# The-Dog-API-MCP

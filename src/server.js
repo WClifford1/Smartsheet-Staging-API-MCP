@@ -1,9 +1,11 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const { dogApiRouter } = require('./routes/dogApi');
+const path = require('path');
+const { smartsheetApiRouter } = require('./routes/smartsheetApi');
 const { openaiRouter } = require('./routes/openai');
 const { mcpRouter } = require('./routes/mcp');
+const { staticRouter } = require('./routes/static');
 
 // Load environment variables
 dotenv.config();
@@ -16,16 +18,17 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use('/api/dogs', dogApiRouter);
+app.use('/api/smartsheet', smartsheetApiRouter);
 app.use('/api/openai', openaiRouter);
 app.use('/mcp', mcpRouter);
+app.use('/', staticRouter);
 
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({
-    message: 'Welcome to the Dog MCP Server',
+    message: 'Welcome to the Smartsheet MCP Server',
     endpoints: {
-      '/api/dogs': 'Dog API endpoints',
+      '/api/smartsheet': 'Smartsheet API endpoints',
       '/api/openai': 'OpenAI endpoints',
       '/mcp': 'MCP endpoints'
     }
